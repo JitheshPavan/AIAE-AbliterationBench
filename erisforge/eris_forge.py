@@ -197,38 +197,52 @@ class Forge:
         }
 
     def _generate_new_tokens(
-        self,
-        model: AutoModelForCausalLM,
-        tokens: Tensor,
-        bar: tqdm | None = None,
-        n_generated_tokens: int = 1,
-        streamer: TextStreamer | None = None,
-    ) -> GenerateDecoderOnlyOutput:
-        """
-        Generates new tokens given a prompt.
-        :param model: A HuggingFace model.
-        :param tokens: Tokenized instruction.
-        :param bar: Progress bar object.
-        :param n_generated_tokens: Number of tokens to generate.
-        :param streamer: TextStreamer object, used for showing the text generation.
-        :return: Generated tokens.
-        """
-        if bar:
-            bar.update(n=1)
-
-        params = {
-            "inputs": tokens.to(self.device),
-            "use_cache": False,
-            "max_new_tokens": n_generated_tokens,
-            "return_dict_in_generate": True,
-            "output_hidden_states": True,
-        }
-
-        if streamer:
-            params["streamer"] = streamer
-
-        output = model.generate(**params)
-        return output
+            self,
+            model: AutoModelForCausalLM,
+            tokens: Tensor,
+            bar: tqdm | None = None,
+            n_generated_tokens: int = 1,
+            streamer: TextStreamer | None = None,
+        ) -> GenerateDecoderOnlyOutput:
+            """
+            Generates new tokens given a prompt.
+            :param model: A HuggingFace model.
+            :param tokens: Tokenized instruction.
+            :param bar: Progress bar object.
+            :param n_generated_tokens: Number of tokens to generate.
+            :param streamer: TextStreamer object, used for showing the text generation.
+            :return: Generated tokens.
+            """
+            if bar:
+                bar.update(n=1)
+    
+            # 1. Move tokens to device
+            tokens = tokens.to(self.device)
+    
+            # 2. Setup base generation parameters
+            params = {
+                "use_cache": False,
+                "max_new_tokens": n_generated_tokens,
+                "return_dict_in_generate": True,
+                "output_hidden_states": True,
+            }
+    
+            # 3. Safely map tokens to the correct arguments based on their actual type
+            if hasattr(tokens, "input_ids"):
+                # It's a BatchEncoding (Qwen3 native behavior)
+                params["input_ids"] = tokens.input_ids
+                if hasattr(tokens, "attention_mask"):
+                    params["attention_mask"] = tokens.attention_mask
+            else:
+                # It's already a pure Tensor (Legacy Qwen1 behavior)
+                params["inputs"] = tokens
+    
+            if streamer:
+                params["streamer"] = streamer
+    
+            # 4. Generate
+            output = model.generate(**params)
+            return output
 
     def compute_output(
         self,
