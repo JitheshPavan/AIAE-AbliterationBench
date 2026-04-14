@@ -197,51 +197,51 @@ class Forge:
         }
 
     def _generate_new_tokens(
-        self,
-        model: AutoModelForCausalLM,
-        tokens: Tensor,
-        bar: tqdm | None = None,
-        n_generated_tokens: int = 1,
-        streamer: TextStreamer | None = None,
-    ) -> GenerateDecoderOnlyOutput:
-        """
-        Generates new tokens given a prompt.
-        :param model: A HuggingFace model.
-        :param tokens: Tokenized instruction.
-        :param bar: Progress bar object.
-        :param n_generated_tokens: Number of tokens to generate.
-        :param streamer: TextStreamer object, used for showing the text generation.
-        :return: Generated tokens.
-        """
-        if bar:
-            bar.update(n=1)
-
-        params = {
-            "inputs": tokens.to(self.device),
-            "use_cache": False,
-            "max_new_tokens": n_generated_tokens,
-            "return_dict_in_generate": True,
-            "output_hidden_states": True,
-        }
-
-        if streamer:
-                    output = model.generate(
-                        tokens.to(self.device),
-                        use_cache=False,
-                        max_new_tokens=n_generated_tokens,
-                        return_dict_in_generate=True,
-                        output_hidden_states=True,
-                        streamer=streamer
-                    )
+            self,
+            model: AutoModelForCausalLM,
+            tokens: Tensor,
+            bar: tqdm | None = None,
+            n_generated_tokens: int = 1,
+            streamer: TextStreamer | None = None,
+        ) -> GenerateDecoderOnlyOutput:
+            """
+            Generates new tokens given a prompt.
+            :param model: A HuggingFace model.
+            :param tokens: Tokenized instruction.
+            :param bar: Progress bar object.
+            :param n_generated_tokens: Number of tokens to generate.
+            :param streamer: TextStreamer object, used for showing the text generation.
+            :return: Generated tokens.
+            """
+            if bar:
+                bar.update(n=1)
+    
+            params = {
+                "inputs": tokens.to(self.device),
+                "use_cache": False,
+                "max_new_tokens": n_generated_tokens,
+                "return_dict_in_generate": True,
+                "output_hidden_states": True,
+            }
+    
+            if streamer:
+                output = model.generate(
+                    tokens.to(self.device),
+                    use_cache=False,
+                    max_new_tokens=n_generated_tokens,
+                    return_dict_in_generate=True,
+                    output_hidden_states=True,
+                    streamer=streamer
+                )
             else:
-                    output = model.generate(
-                        tokens.to(self.device),
-                        use_cache=False,
-                        max_new_tokens=n_generated_tokens,
-                        return_dict_in_generate=True,
-                        output_hidden_states=True
-                    )        
-        return output
+                output = model.generate(
+                    tokens.to(self.device),
+                    use_cache=False,
+                    max_new_tokens=n_generated_tokens,
+                    return_dict_in_generate=True,
+                    output_hidden_states=True
+                )        
+            return output
 
     def compute_output(
         self,
