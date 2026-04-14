@@ -226,7 +226,7 @@ class Forge:
     
             if streamer:
                 output = model.generate(
-                    tokens.to(self.device),
+                    **tokens.to(self.device),
                     use_cache=False,
                     max_new_tokens=n_generated_tokens,
                     return_dict_in_generate=True,
@@ -235,7 +235,7 @@ class Forge:
                 )
             else:
                 output = model.generate(
-                    tokens.to(self.device),
+                    **tokens.to(self.device),
                     use_cache=False,
                     max_new_tokens=n_generated_tokens,
                     return_dict_in_generate=True,
